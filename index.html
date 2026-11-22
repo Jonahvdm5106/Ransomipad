@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="RansomP" />
+  <link rel="apple-touch-icon" href="RansomP.png" />
+  <title>RansomP</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+    }
+
+    #game-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #background {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    #ransom-p {
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      object-fit: contain;
+      left: 180px;
+      top: 300px;
+      transform: translate(-50%, -50%);
+      transition: transform 0.055s linear;
+      will-change: transform, left, top;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <img id="background" src="Background.png" alt="Background" />
+    <img id="ransom-p" src="RansomP.png" alt="RansomP" />
+  </div>
+
+  <audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
+
+  <script>
+    const sprite = document.getElementById("ransom-p");
+    const music = document.getElementById("bg-music");
+
+    // 1. Move randomly every 5 seconds (matching Swift's 150px margin & instant jump)
+    function moveRandomly() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      const safeWidth = Math.max(150, width - 150);
+      const safeHeight = Math.max(150, height - 150);
+
+      const randomX = Math.random() * (safeWidth - 150) + 150;
+      const randomY = Math.random() * (safeHeight - 150) + 150;
+
+      sprite.style.left = `${randomX}px`;
+      sprite.style.top = `${randomY}px`;
+    }
+
+    // 2. Micro-shake every 0.055 seconds (-1.5px to +1.5px)
+    setInterval(() => {
+      const shakeX = (Math.random() * 3) - 1.5;
+      const shakeY = (Math.random() * 3) - 1.5;
+      sprite.style.transform = `translate(calc(-50% + ${shakeX}px), calc(-50% + ${shakeY}px))`;
+    }, 55);
+
+    // 3. Looping background audio (iOS Safari requires a tap if autoplay is blocked)
+    function startMusic() {
+      music.volume = 1.0;
+      music.play().catch(() => {
+        // Fallback: start audio on the user's first screen tap
+        const unlockAudio = () => {
+          music.play();
+          window.removeEventListener("touchstart", unlockAudio);
+          window.removeEventListener("click", unlockAudio);
+        };
+        window.addEventListener("touchstart", unlockAudio, { once: true });
+        window.addEventListener("click", unlockAudio, { once: true });
+      });
+    }
+
+    // Run on load
+    window.addEventListener("load", () => {
+      moveRandomly();
+      startMusic();
+      setInterval(moveRandomly, 5000);
+    });
+  </script>
+</body>
+</html>
